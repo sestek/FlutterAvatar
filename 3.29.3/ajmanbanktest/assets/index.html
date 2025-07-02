@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      /* this image is prepared as a demo.
+      you can replace it with any other image you want. */
+      body {
+        background-image: url("https://demo-app.sestek.com/Images/ajmanBack.png");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+      }
+    </style>
+    <script>
+      window.sestekInitConfig = {
+        customMetaData: {
+          userId: "123456",
+        },
+        initialOptionsData: "Type Here... ", //placeholder text to be written to input
+        chatPageTitle: "AjmanBank Virtual Agent", //text to be placed on the top bar only when the chat screen opens
+        channel: "kiosk", //required field specify on which platform you will run it
+        vaCredentialId: "", //required field
+        dataFlowCredentialID: "", //required field
+        // projectName: 'AjmanBankFullLLM', //required field VA projecet name
+        projectName: "AjmanBankFullLLM", //required field VA projecet name
+
+        enableAvatar: true, //required field ,
+        connectionUrl: "https://api-eu.uneeq.io", //uneeq connection address
+        personaId: "", //required field
+        sestektts: true, //required field sesstek tts use
+        defaultLanguage: "en-US", //required field
+        dataFlowProjectName: "avatar",
+        dataFlowTenantId: "",
+        dataFlowTokenCredential: "",
+        // socketUrl:'wss://dataflow.example.knovvu.com' //for test environment
+      };
+    </script>
+    <script>
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "CLOSE_CHAT") {
+          const iframe = document.querySelector("iframe");
+          if (iframe) iframe.remove();
+
+          console.log("Chat asked to close");
+        }
+        if (event.data?.type === "handleRedirect") {
+          console.log("handleRedirect", event.data);
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <script src="https://va.uae.knovvu.com/avataradapter/sestekavatar.js"></script>
+  </body>
+</html>
