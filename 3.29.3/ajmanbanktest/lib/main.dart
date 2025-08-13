@@ -188,6 +188,11 @@ class _WebViewPageState extends State<WebViewPage> {
         ),
       );
     }
+
+    // İzin durumlarını debug için yazdır
+    debugPrint('Mikrofon izni: $microphoneStatus');
+    debugPrint('Kamera izni: $cameraStatus');
+    debugPrint('Depolama izni: $storageStatus');
   }
 
   void _initializeWebView() {
@@ -214,8 +219,13 @@ class _WebViewPageState extends State<WebViewPage> {
             debugPrint('WebView yükleniyor (progress : $progress%)');
           },
           onPageStarted: (String url) {},
-          onPageFinished: (String url) {},
-          onWebResourceError: (WebResourceError error) {},
+          onPageFinished: (String url) {
+            // Sayfa yüklendiğinde mikrofon izni için JavaScript kodu çalıştır
+            _injectMicrophonePermissionScript();
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint('WebView hatası: ${error.description}');
+          },
         ),
       )
       ..addJavaScriptChannel(
@@ -227,6 +237,29 @@ class _WebViewPageState extends State<WebViewPage> {
           ).showSnackBar(SnackBar(content: Text(message.message)));
         },
       )
+      ..addJavaScriptChannel(
+        'permissionHandler',
+        onMessageReceived: (JavaScriptMessage message) {
+          debugPrint("İzin durumu: ${message.message}");
+          if (message.message.contains('microphone_denied')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mikrofon izni reddedildi. Lütfen ayarlardan izin verin.'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          } else if (message.message.contains('microphone_granted')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mikrofon izni verildi!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+      )
       ..loadFlutterAsset('assets/index.html');
 
     if (controller.platform is AndroidWebViewController) {
@@ -236,6 +269,45 @@ class _WebViewPageState extends State<WebViewPage> {
     }
 
     _controller = controller;
+  }
+
+  void _injectMicrophonePermissionScript() {
+    const String script = '''
+      // Mikrofon izni için gelişmiş script
+      async function requestMicrophonePermission() {
+        try {
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            console.log('Mikrofon izni isteniyor...');
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              }, 
+              video: false 
+            });
+            console.log('Mikrofon erişimi başarılı');
+            window.permissionHandler.postMessage('microphone_granted');
+            return stream;
+          } else {
+            console.log('getUserMedia desteklenmiyor');
+            window.permissionHandler.postMessage('microphone_not_supported');
+          }
+        } catch (err) {
+          console.log('Mikrofon erişimi hatası:', err);
+          window.permissionHandler.postMessage('microphone_denied: ' + err.message);
+        }
+      }
+      
+      // Sayfa yüklendiğinde mikrofon izni iste
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', requestMicrophonePermission);
+      } else {
+        requestMicrophonePermission();
+      }
+    ''';
+    
+    _controller.runJavaScript(script);
   }
 
   @override

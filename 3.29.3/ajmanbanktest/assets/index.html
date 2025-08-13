@@ -22,25 +22,56 @@
       }
     </style>
     <script>
-      // WebView için mikrofon erişimi
+      // WebView için gelişmiş mikrofon erişimi
       async function requestMicrophoneAccess() {
         try {
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            console.log('Mikrofon izni isteniyor...');
             const stream = await navigator.mediaDevices.getUserMedia({ 
-              audio: true, 
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                sampleRate: 44100
+              }, 
               video: false 
             });
             console.log('Mikrofon erişimi başarılı');
+            
+            // Flutter'a başarı mesajı gönder
+            if (window.permissionHandler) {
+              window.permissionHandler.postMessage('microphone_granted');
+            }
+            
             return stream;
+          } else {
+            console.log('getUserMedia desteklenmiyor');
+            if (window.permissionHandler) {
+              window.permissionHandler.postMessage('microphone_not_supported');
+            }
           }
         } catch (err) {
           console.log('Mikrofon erişimi hatası:', err);
+          if (window.permissionHandler) {
+            window.permissionHandler.postMessage('microphone_denied: ' + err.message);
+          }
         }
       }
       
       // Sayfa yüklendiğinde mikrofon erişimi iste
       document.addEventListener('DOMContentLoaded', function() {
-        requestMicrophoneAccess();
+        // Kısa bir gecikme ile mikrofon izni iste
+        setTimeout(() => {
+          requestMicrophoneAccess();
+        }, 1000);
+      });
+      
+      // Global hata yakalayıcı
+      window.addEventListener('error', function(e) {
+        console.log('Global hata:', e.error);
+        if (window.permissionHandler) {
+          window.permissionHandler.postMessage('error: ' + e.error.message);
+        }
       });
       
       window.sestekInitConfig = {
