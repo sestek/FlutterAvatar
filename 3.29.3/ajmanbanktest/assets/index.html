@@ -22,6 +22,27 @@
       }
     </style>
     <script>
+      // WebView için mikrofon erişimi
+      async function requestMicrophoneAccess() {
+        try {
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+              audio: true, 
+              video: false 
+            });
+            console.log('Mikrofon erişimi başarılı');
+            return stream;
+          }
+        } catch (err) {
+          console.log('Mikrofon erişimi hatası:', err);
+        }
+      }
+      
+      // Sayfa yüklendiğinde mikrofon erişimi iste
+      document.addEventListener('DOMContentLoaded', function() {
+        requestMicrophoneAccess();
+      });
+      
       window.sestekInitConfig = {
         customMetaData: {
           userId: "123456",
@@ -29,19 +50,20 @@
         initialOptionsData: "Type Here... ", //placeholder text to be written to input
         chatPageTitle: "AjmanBank Virtual Agent", //text to be placed on the top bar only when the chat screen opens
         channel: "kiosk", //required field specify on which platform you will run it
-        vaCredentialId: "", //required field
-        dataFlowCredentialID: "", //required field
-        // projectName: 'AjmanBankFullLLM', //required field VA projecet name
+        vaCredentialId: "43b29cf7-c07e-4e7d-becd-aadda22cd7e8", //required field
+        dataFlowCredentialID: "8991f806-3979-4e8d-bf52-b5869558ff1e", //required field
+        // projectName: 'TestAvatar', 'AjmanBankFullLLM', //required field VA projecet name
         projectName: "AjmanBankFullLLM", //required field VA projecet name
 
         enableAvatar: true, //required field ,
         connectionUrl: "https://api-eu.uneeq.io", //uneeq connection address
-        personaId: "", //required field
+        personaId: "f62732f4-513b-4323-8aa7-da35e1e72746", //required field
         sestektts: true, //required field sesstek tts use
         defaultLanguage: "en-US", //required field
         dataFlowProjectName: "avatar",
-        dataFlowTenantId: "",
-        dataFlowTokenCredential: "",
+        dataFlowTenantId: "3a1a7b64-53b1-7074-9e91-b03f0baaef85",
+        dataFlowTokenCredential:
+          "YWptYW5iYW5rX1dhZ3RhaWxAUzZDVXpHcWJJMzVENDRMV2c=",
         // socketUrl:'wss://dataflow.example.knovvu.com' //for test environment
       };
     </script>
